@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "83013468002",
+    "firebase_url": "https://eatwhatapp1-8186e-default-rtdb.firebaseio.com",
+    "project_id": "eatwhatapp1-8186e",
+    "storage_bucket": "eatwhatapp1-8186e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:83013468002:android:97cb0163b3d2f59ba3363b",
+        "android_client_info": {
+          "package_name": "com.example.final_project_c111151116"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTWNdAqXs199EMbdZ7MjVaru8R_k-CuXc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

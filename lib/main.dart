@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'login_page.dart';
+import 'recommend_page.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -19,10 +27,29 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.orangeAccent),
         useMaterial3: true,
       ),
-      home: MyHomePage(),
+      home: AuthGate(),
     );
   }
 }
+
+class AuthGate extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+
+        if (snapshot.data == null || snapshot.data!.isAnonymous) { //!snapshot.hasData
+          return LoginPage();
+        }
+        else {
+          return MyHomePage(); // 你原本的主頁面
+        }
+      },
+    );
+  }
+}
+
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -110,6 +137,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.pop(context);
               },
             ),
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text("登出"),
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+              },
+            ),
           ],
         ),
       ),
@@ -120,63 +154,104 @@ class _MyHomePageState extends State<MyHomePage> {
             image: DecorationImage(
               image: AssetImage("assets/bg6.jpg"),fit: BoxFit.cover,)
         ),
-        child: Column(
-          children: [
-            SizedBox(height:100,),
-            Image(image: AssetImage('assets/chef.png')),
-            Center(
-              child: Text(
-                '歡迎使用\n「今天吃什麼?」APP',
-                style: TextStyle(fontSize: 30,fontFamily:"GenSekiGothic2-H",color: Colors.black),
-                textAlign: TextAlign.center,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            children: [
+              SizedBox(height:10,),
+              Image(image: AssetImage('assets/chef.png'),height: 200,width: 200,),
+              Center(
+                child: Text(
+                  '歡迎使用\n「今天吃什麼?」APP',
+                  style: TextStyle(fontSize: 30,fontFamily:"GenSekiGothic2-H",color: Colors.black),
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
-            SizedBox(height: 20,),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                SizedBox(width: 10,),
-                IconButton(
-                    iconSize: 50,
-                    onPressed: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RandomChoicePage(meals: meals),
-                        ),
-                      );
-                    },
-                    icon: Image.asset(
+              //SizedBox(height: 5,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  SizedBox(width: 10,),
+                  IconButton(
+                      iconSize: 30,
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RandomChoicePage(meals: meals),
+                          ),
+                        );
+                      },
+                      icon: Image.asset(
                         'assets/start.png',
-                         height: 150,
-                         width: 150,
-                    )
-                ),
-                IconButton(
-                  iconSize: 50,
-                    onPressed: () async {
-                      final updatedMeals = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditOptionsPage(meals: meals),
-                        ),
-                      );
-                      if (updatedMeals != null) {
-                        setState(() {
-                          meals = updatedMeals;
-                        });
-                        _saveMeals();
-                      }
-                    },
-                    icon: Image.asset(
+                        height: 150,
+                        width: 150,
+                      )
+                  ),
+                  IconButton(
+                      iconSize: 30,
+                      onPressed: () async {
+                        final updatedMeals = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditOptionsPage(meals: meals),
+                          ),
+                        );
+                        if (updatedMeals != null) {
+                          setState(() {
+                            meals = updatedMeals;
+                          });
+                          _saveMeals();
+                        }
+                      },
+                      icon: Image.asset(
                         'assets/edit.png',
-                         height: 180,
-                         width: 180,
-                    )
-                ),
-              ],
-            ),
-          ],
+                        height: 180,
+                        width: 180,
+                      )
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  SizedBox(width: 10,),
+                  IconButton(
+                      iconSize: 30,
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RecommendPage(),
+                          ),
+                        );
+                      },
+                      icon: Image.asset(
+                        'assets/recommend.png',
+                        height: 150,
+                        width: 150,
+                      )
+                  ),
+                  IconButton(
+                      iconSize: 30,
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => HistoryPage(),
+                            ),
+                        );
+                      },
+                      icon: Image.asset(
+                        'assets/history.png',
+                        height: 180,
+                        width: 180,
+                      )
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
 
@@ -224,12 +299,26 @@ class RandomChoicePage extends StatelessWidget {
   final Map<String, List<String>> meals;
   RandomChoicePage({required this.meals});
 
-  void _showRandomResult(BuildContext context, String mealType) {
+  void _showRandomResult(BuildContext context, String mealType) async{
     final options = meals[mealType]!;
     if (options.isEmpty) {
       _showDialog(context, '目前沒有選項，請新增選項');
     } else {
       final randomChoice = (options..shuffle()).first;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('meal_history')
+            .doc()
+            .set({
+              'mealType': mealType,
+              'choice': randomChoice,
+              'time': Timestamp.now(),
+            });
+      }
+
       _showDialog(context, '隨機選擇的${mealType}是：$randomChoice');
     }
   }
@@ -464,4 +553,75 @@ class _ideaPageState extends State<ideaPage> {
   }
 }
 
+
+class HistoryPage extends StatelessWidget {
+  const HistoryPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return Scaffold(
+        body: Center(child: Text("尚未登入")),
+      );
+    }
+    else{
+      return Scaffold(
+        appBar: AppBar(title:Text("歷史紀錄")),
+        body: Container(
+          height: double.infinity,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            image: DecorationImage(image: AssetImage('assets/bg8.png'),fit: BoxFit.cover)
+          ),
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .collection('meal_history')
+                .orderBy('time', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData){
+                return Center(child: CircularProgressIndicator());
+              }
+
+              final docs = snapshot.data!.docs;
+
+              if (docs.isEmpty) {
+                return const Center(child: Text("暫無任何紀錄"));
+              }
+
+              return ListView.builder(
+                itemCount: docs.length,
+                itemBuilder: (context, index) {
+                  final doc = docs[index];
+                  final mealType = doc['mealType'];
+                  final choice = doc['choice'];
+                  final time = (doc['time'] as Timestamp).toDate();
+                  final formattedTime = DateFormat('yyyy-MM-dd HH:mm').format(time);
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.horizontal(
+                        left: Radius.zero,
+                        right: Radius.circular(30),
+                      ),
+                    ),
+                    elevation: 10,
+                    clipBehavior: Clip.antiAlias,
+                    child: ListTile(
+                      title: Text('$mealType: $choice',style: TextStyle(fontSize: 26,fontFamily:"851tegaki",color: Colors.black),),
+                      subtitle: Text(formattedTime,style: TextStyle(fontSize: 16,color: Colors.black),),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      );
+    }
+  }
+}
 
