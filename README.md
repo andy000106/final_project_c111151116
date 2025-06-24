@@ -1,4 +1,6 @@
 # final_project_c111151116
+資工三甲 C111151116 梁哲華 
+期末專案 今天吃什麼 APP
 
 A new Flutter project.
 
