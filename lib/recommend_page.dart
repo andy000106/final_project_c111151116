@@ -49,8 +49,8 @@ class _RecommendPageState extends State<RecommendPage> {
       isLoading = true;
     });
 
-    // 中央氣象局api
-    final apiKey = "中央氣象局的氣象開放資料平台會員授權碼";
+    // 中央氣象局api key-中央氣象局的氣象開放資料平台會員授權碼
+    final apiKey = "CWA-CD851DB2-8369-472C-BCA7-74E6D5901037";
     final url = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=$apiKey';
 
     try {
